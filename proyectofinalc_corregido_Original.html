@@ -1,0 +1,1890 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<title>Proyecto Final Análisis Numérico</title>
+
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/mathjs/11.8.0/math.min.js"></script>
+
+<style>
+  /* === ESTILOS ORIGINALES PARTES 1 y 2 (SIN MODIFICAR) === */
+  body{font-family:'Segoe UI',Arial,sans-serif;margin:0;padding:20px;background:#f7fafc;min-height:100vh}
+  .container{background:white;padding:25px;border-radius:8px;box-shadow:0 2px 8px rgba(0,0,0,0.1);max-width:1400px;margin:0 auto}
+  
+  .tabs{display:flex;gap:5px;margin-bottom:20px;border-bottom:2px solid #e2e8f0;padding-bottom:10px}
+  .tab-btn{padding:10px 20px;border:none;background:#e2e8f0;border-radius:4px;cursor:pointer;font-weight:600;transition:0.3s;color:#4a5568}
+  .tab-btn:hover{background:#cbd5e0}
+  .tab-btn.active{background:#4a5568;color:white}
+  .tab-content{display:none}
+  .tab-content.active{display:block}
+  
+  .main-layout{display:grid;grid-template-columns:1fr 280px;gap:20px}
+  @media(max-width:1000px){.main-layout{grid-template-columns:1fr}}
+  
+  .input-row{display:flex;gap:10px;align-items:center;flex-wrap:wrap;margin:8px 0}
+  .input-row label{font-weight:600;color:#2d3748;min-width:60px}
+  .input-row input,.input-row select{padding:8px 12px;border:1px solid #cbd5e0;border-radius:4px;font-size:0.95rem;flex:1;min-width:120px}
+  .input-row input:focus,.input-row select:focus{outline:none;border-color:#4a5568;box-shadow:0 0 0 2px rgba(74,85,104,0.1)}
+  
+  button{padding:10px 20px;background:#4a5568;color:white;border:none;border-radius:4px;cursor:pointer;font-weight:600;transition:0.2s;margin:5px 5px 5px 0}
+  button:hover{background:#2d3748}
+  button.secondary{background:#718096}
+  button.secondary:hover{background:#4a5568}
+  
+  #mensaje{padding:12px;margin:15px 0;border-radius:4px;display:none;font-weight:500}
+  #mensaje.error{background:#fed7d7;border-left:4px solid #e53e3e;color:#c53030;display:block}
+  #mensaje.success{background:#c6f6d5;border-left:4px solid #38a169;color:#276749;display:block}
+  #mensaje.warning{background:#feebc8;border-left:4px solid #dd6b20;color:#c05621;display:block}
+  
+  table{border-collapse:collapse;width:100%;margin:15px 0;font-size:0.9rem}
+  th,td{border:1px solid #e2e8f0;padding:8px;text-align:center}
+  th{background:#4a5568;color:white;position:sticky;top:0}
+  tr:hover{background:#f7fafc}
+  .table-container{max-height:400px;overflow-y:auto;border:1px solid #e2e8f0;border-radius:4px}
+  
+  .geogebra-panel{background:white;border-radius:8px;box-shadow:0 2px 8px rgba(0,0,0,0.08);overflow:hidden}
+  .geogebra-header{background:#48bb78;color:white;padding:12px 15px;cursor:pointer;display:flex;justify-content:space-between;align-items:center;user-select:none}
+  .geogebra-header:hover{background:#38a169}
+  .geogebra-header h4{margin:0;font-size:1rem}
+  .toggle-icon{font-size:1.3rem;transition:transform 0.3s}
+  .toggle-icon.collapsed{transform:rotate(-90deg)}
+  .geogebra-content{padding:15px;max-height:400px;overflow-y:auto;transition:max-height 0.3s}
+  .geogebra-content.collapsed{max-height:0;padding:0 15px;overflow:hidden}
+  
+  .func-table{width:100%;border-collapse:collapse;font-size:0.85rem}
+  .func-table th,.func-table td{padding:6px 8px;text-align:left;border-bottom:1px solid #e2e8f0}
+  .func-table th{background:#f7fafc;font-weight:600;color:#4a5568}
+  .func-table code{background:#edf2f7;padding:2px 5px;border-radius:3px;font-size:0.8rem}
+  .func-table button{padding:4px 10px;background:#48bb78;color:white;border:none;border-radius:4px;cursor:pointer;font-size:0.75rem}
+  .func-table button:hover{background:#38a169}
+  .active-input{border-color:#4a5568!important;background:#ebf8ff!important}
+  
+  .charts-grid{display:grid;grid-template-columns:1fr 1fr;gap:20px;margin-top:20px}
+  @media(max-width:900px){.charts-grid{grid-template-columns:1fr}}
+  .chart-box{background:white;padding:15px;border-radius:8px;box-shadow:0 2px 8px rgba(0,0,0,0.08)}
+  .chart-box h4{margin:0 0 10px 0;color:#2d3748}
+  canvas{max-height:300px}
+  
+  .placeholder{padding:40px;text-align:center;color:#718096}
+  .placeholder h3{color:#2d3748;margin-bottom:10px}
+  
+  .hidden{display:none!important}
+
+  /* === ESTILOS PARTE 3 (INTERPOLACIÓN) - VERSIÓN BLANCA como Partes 1 y 2 === */
+  .interp-layout {
+    display: grid;
+    grid-template-columns: 360px 1fr;
+    gap: 20px;
+    margin-top: 10px;
+    align-items: start;
+  }
+  @media(max-width: 1000px) { .interp-layout { grid-template-columns: 1fr; } }
+  
+  .interp-panel {
+    background: white;
+    border: 1px solid #e2e8f0;
+    border-radius: 8px;
+    padding: 20px;
+    box-shadow: 0 1px 3px rgba(0,0,0,0.05);
+  }
+  .interp-panel-title {
+    font-size: 0.75rem;
+    font-weight: 700;
+    letter-spacing: 1px;
+    text-transform: uppercase;
+    color: #718096;
+    margin-bottom: 16px;
+    font-family: 'Segoe UI', Arial, sans-serif;
+  }
+  
+  .interp-field { margin-bottom: 14px; }
+  .interp-field label {
+    display: block;
+    font-size: 0.8rem;
+    font-weight: 600;
+    color: #4a5568;
+    margin-bottom: 5px;
+  }
+  .interp-field input, .interp-field select {
+    width: 100%;
+    padding: 8px 12px;
+    background: white;
+    border: 1px solid #cbd5e0;
+    border-radius: 4px;
+    color: #2d3748;
+    font-size: 0.9rem;
+    transition: border-color 0.2s;
+  }
+  .interp-field input:focus, .interp-field select:focus {
+    outline: none;
+    border-color: #4a5568;
+    box-shadow: 0 0 0 2px rgba(74,85,104,0.1);
+  }
+  
+  .interp-puntos-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr auto;
+    gap: 6px;
+    align-items: center;
+    margin-bottom: 6px;
+  }
+  .interp-puntos-grid input {
+    padding: 7px 10px;
+    background: white;
+    border: 1px solid #cbd5e0;
+    border-radius: 4px;
+    color: #2d3748;
+    font-size: 0.85rem;
+    width: 100%;
+  }
+  .interp-punto-label {
+    font-size: 0.75rem;
+    font-weight: 600;
+    color: #718096;
+    text-align: center;
+  }
+  .interp-btn-del {
+    background: transparent;
+    border: 1px solid #cbd5e0;
+    color: #e53e3e;
+    border-radius: 4px;
+    width: 28px;
+    height: 28px;
+    cursor: pointer;
+    font-size: 1rem;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: all 0.2s;
+  }
+  .interp-btn-del:hover { background: #e53e3e; color: white; border-color: #e53e3e; }
+  
+  .interp-btn {
+    padding: 10px 18px;
+    border: none;
+    border-radius: 4px;
+    cursor: pointer;
+    font-weight: 600;
+    font-size: 0.9rem;
+    transition: all 0.2s;
+  }
+  .interp-btn-primary {
+    background: #4a5568;
+    color: white;
+    width: 100%;
+    margin-top: 4px;
+  }
+  .interp-btn-primary:hover { background: #2d3748; }
+  .interp-btn-secondary {
+    background: #e2e8f0;
+    color: #4a5568;
+    border: none;
+    font-size: 0.82rem;
+    padding: 7px 12px;
+  }
+  .interp-btn-secondary:hover { background: #cbd5e0; color: #2d3748; }
+  .interp-btn-add {
+    background: transparent;
+    border: 1px dashed #cbd5e0;
+    color: #718096;
+    width: 100%;
+    padding: 7px;
+    font-size: 0.82rem;
+    border-radius: 4px;
+    cursor: pointer;
+    transition: all 0.2s;
+  }
+  .interp-btn-add:hover { border-color: #48bb78; color: #48bb78; }
+  
+  .interp-val-opts {
+    display: flex;
+    gap: 8px;
+    margin-top: 6px;
+  }
+  .interp-val-badge {
+    flex: 1;
+    padding: 8px;
+    border: 1px solid #cbd5e0;
+    border-radius: 4px;
+    background: white;
+    text-align: center;
+    cursor: pointer;
+    font-size: 0.8rem;
+    font-weight: 500;
+    color: #718096;
+    transition: all 0.2s;
+  }
+  .interp-val-badge.active {
+    border-color: #4a5568;
+    color: #4a5568;
+    background: #edf2f7;
+  }
+  .interp-val-badge:hover { border-color: #4a5568; color: #4a5568; }
+  
+  .interp-msg {
+    padding: 10px 14px;
+    border-radius: 4px;
+    font-size: 0.85rem;
+    margin: 12px 0;
+    display: none;
+    border-left: 3px solid;
+  }
+  .interp-msg.error { display: block; background: #fed7d7; border-color: #e53e3e; color: #c53030; }
+  .interp-msg.success { display: block; background: #c6f6d5; border-color: #38a169; color: #276749; }
+  .interp-msg.warning { display: block; background: #feebc8; border-color: #dd6b20; color: #c05621; }
+  
+  .interp-resultado-box {
+    background: #f7fafc;
+    border: 1px solid #e2e8f0;
+    border-radius: 8px;
+    padding: 18px;
+    margin-bottom: 20px;
+  }
+  .interp-resultado-box h3 {
+    font-size: 0.75rem;
+    letter-spacing: 1px;
+    text-transform: uppercase;
+    color: #718096;
+    margin-bottom: 10px;
+  }
+  .interp-poly-display {
+    font-family: 'Courier New', monospace;
+    font-size: 0.88rem;
+    color: #2d3748;
+    word-break: break-all;
+    line-height: 1.6;
+  }
+  .interp-dominio-badge {
+    display: inline-block;
+    margin-top: 8px;
+    padding: 4px 10px;
+    background: #edf2f7;
+    border-radius: 4px;
+    font-size: 0.78rem;
+    color: #4a5568;
+  }
+  .interp-error-val {
+    margin-top: 12px;
+    padding: 10px;
+    background: #feebc8;
+    border-radius: 4px;
+    font-size: 0.83rem;
+    color: #c05621;
+  }
+  .interp-tramos-container { margin-top: 10px; }
+  .interp-tramo-item {
+    background: #f7fafc;
+    border: 1px solid #e2e8f0;
+    border-radius: 6px;
+    padding: 10px 14px;
+    margin-bottom: 8px;
+  }
+  .interp-tramo-label {
+    font-size: 0.72rem;
+    color: #718096;
+    margin-bottom: 4px;
+  }
+  .interp-tramo-poly {
+    font-family: 'Courier New', monospace;
+    font-size: 0.83rem;
+    color: #38a169;
+    word-break: break-all;
+  }
+  
+  .interp-table-wrap {
+    overflow-x: auto;
+    border: 1px solid #e2e8f0;
+    border-radius: 8px;
+    margin-bottom: 20px;
+  }
+  .interp-table-wrap table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 0.83rem;
+  }
+  .interp-table-wrap th {
+    background: #4a5568;
+    color: white;
+    padding: 10px 12px;
+    text-align: center;
+    font-size: 0.72rem;
+    letter-spacing: 1px;
+    text-transform: uppercase;
+  }
+  .interp-table-wrap td {
+    padding: 8px 12px;
+    text-align: center;
+    border-bottom: 1px solid #e2e8f0;
+    color: #2d3748;
+  }
+  .interp-table-wrap tr:last-child td { border-bottom: none; }
+  .interp-table-wrap tr:hover td { background: #f7fafc; }
+  .interp-td-val { color: #e53e3e; font-weight: 600; }
+  
+  .interp-charts-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 16px;
+    margin-top: 20px;
+  }
+  @media(max-width: 800px) { .interp-charts-grid { grid-template-columns: 1fr; } }
+  .interp-chart-box {
+    background: white;
+    border: 1px solid #e2e8f0;
+    border-radius: 8px;
+    padding: 16px;
+    box-shadow: 0 1px 3px rgba(0,0,0,0.05);
+  }
+  .interp-chart-box h4 {
+    font-size: 0.75rem;
+    letter-spacing: 1px;
+    text-transform: uppercase;
+    color: #718096;
+    margin-bottom: 12px;
+  }
+  
+  .interp-sep { height: 1px; background: #e2e8f0; margin: 14px 0; }
+  .interp-tag-train { color: #38a169; font-weight: 500; }
+  .interp-tag-val { color: #e53e3e; font-weight: 600; }
+</style>
+</head>
+
+<body>
+<div class="container">
+
+<h2 style="text-align:center;color:#2d3748;margin-bottom:5px">Proyecto Final: Análisis Numérico</h2>
+<p style="text-align:center;color:#718096;margin-bottom:20px">Calculadora de Ecuaciones No Lineales, Sistemas e Interpolación</p>
+
+<div class="tabs">
+  <button class="tab-btn active" onclick="cambiarTab('ecuaciones')">Ecuaciones No Lineales</button>
+  <button class="tab-btn" onclick="cambiarTab('sistemas')">Sistemas de Ecuaciones</button>
+  <button class="tab-btn" onclick="cambiarTab('interpolacion')">Interpolación</button>
+</div>
+
+<!-- ========== PARTE 1: ECUACIONES NO LINEALES ========== -->
+<div id="tab-ecuaciones" class="tab-content active">
+  
+  <div class="main-layout">
+    
+    <div>
+      <div class="input-row">
+        <label>f(x):</label>
+        <input id="funcion" value="x^3 - x - 2" class="func-input" placeholder="Ej: x^3 - 2*x - 5">
+      </div>
+
+      <div id="gxbox" class="hidden input-row">
+        <label>g(x):</label>
+        <input id="gx" value="" class="func-input" placeholder="Función de iteración">
+      </div>
+
+      <div class="input-row">
+        <label>Método:</label>
+        <select id="metodo" onchange="actualizarInputs()">
+          <option value="biseccion">Bisección</option>
+          <option value="reglaFalsa">Regla Falsa</option>
+          <option value="newton">Newton</option>
+          <option value="secante">Secante</option>
+          <option value="puntoFijo">Punto Fijo</option>
+          <option value="raicesMultiples">Raíces Múltiples</option>
+        </select>
+      </div>
+
+      <div class="input-row">
+        <label>x0:</label>
+        <input id="x0" value="1" type="number" step="any">
+        <span id="x1box">
+          <label>x1:</label>
+          <input id="x1" value="2" type="number" step="any">
+        </span>
+      </div>
+
+      <div class="input-row">
+        <label>Criterio:</label>
+        <select id="criterio">
+          <option value="ea">Error absoluto</option>
+          <option value="er1">Error relativo 1</option>
+          <option value="er2">Error relativo 2</option>
+          <option value="fx">|f(x)|</option>
+        </select>
+      </div>
+
+      <div class="input-row">
+        <label>Tol:</label>
+        <input id="tol" value="1e-4" type="number" step="any">
+        <label>Iter:</label>
+        <input id="niter" value="50" type="number">
+      </div>
+
+      <button onclick="calcular()">Calcular</button>
+      <button class="secondary" onclick="limpiarTodo()">Limpiar</button>
+
+      <div id="mensaje"></div>
+
+      <h3 style="margin-top:25px;color:#2d3748">Tabla de Iteraciones</h3>
+      <div class="table-container">
+        <table id="tabla"><thead><tr><th>n</th><th>x</th><th>f(x)</th><th>|f(x)|</th><th>Eabs</th><th>Erel1</th><th>Erel2</th></tr></thead><tbody></tbody></table>
+      </div>
+
+      <div id="resultado" style="margin-top:15px;font-weight:600;color:#2d3748"></div>
+    </div>
+
+    <div class="geogebra-panel">
+      <div class="geogebra-header" onclick="toggleGeoGebra()">
+        <h4>Funciones y Operadores</h4>
+        <span class="toggle-icon" id="geoToggle">▼</span>
+      </div>
+      <div class="geogebra-content" id="geoContent">
+        <p style="margin:0 0 10px 0;font-size:0.85rem;color:#4a5568">Clic en Insertar para añadir al campo activo.</p>
+        <table class="func-table">
+          <thead><tr><th>Función</th><th>Sintaxis</th><th>Acción</th></tr></thead>
+          <tbody>
+            <tr><td>Potencia</td><td><code>x^n</code></td><td><button onclick="insertar('^3')">Insertar</button></td></tr>
+            <tr><td>Raíz</td><td><code>sqrt(x)</code></td><td><button onclick="insertar('sqrt(')">Insertar</button></td></tr>
+            <tr><td>Seno</td><td><code>sin(x)</code></td><td><button onclick="insertar('sin(')">Insertar</button></td></tr>
+            <tr><td>Coseno</td><td><code>cos(x)</code></td><td><button onclick="insertar('cos(')">Insertar</button></td></tr>
+            <tr><td>Tangente</td><td><code>tan(x)</code></td><td><button onclick="insertar('tan(')">Insertar</button></td></tr>
+            <tr><td>Exponencial</td><td><code>exp(x)</code></td><td><button onclick="insertar('exp(')">Insertar</button></td></tr>
+            <tr><td>Logaritmo</td><td><code>log(x)</code></td><td><button onclick="insertar('log(')">Insertar</button></td></tr>
+            <tr><td>Valor absoluto</td><td><code>abs(x)</code></td><td><button onclick="insertar('abs(')">Insertar</button></td></tr>
+            <tr><td>Pi</td><td><code>pi</code></td><td><button onclick="insertar('pi')">Insertar</button></td></tr>
+            <tr><td>e</td><td><code>e</code></td><td><button onclick="insertar('e')">Insertar</button></td></tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+
+  </div>
+
+  <div class="charts-grid">
+    <div class="chart-box">
+      <h4>Gráfica de f(x)</h4>
+      <canvas id="grafica"></canvas>
+    </div>
+    <div class="chart-box">
+      <h4>Convergencia de Errores y |f(x)|</h4>
+      <canvas id="error"></canvas>
+    </div>
+  </div>
+
+</div>
+
+<!-- ========== PARTE 2: SISTEMAS DE ECUACIONES ========== -->
+<div id="tab-sistemas" class="tab-content">
+
+  <div class="input-row">
+    <label>Método:</label>
+    <select id="metodoSistema">
+      <option value="jacobi">Jacobi</option>
+      <option value="gs">Gauss-Seidel</option>
+      <option value="sor">SOR</option>
+    </select>
+
+    <label>ω:</label>
+    <input id="omega" type="number" value="1.1" step="any">
+  </div>
+
+  <div class="input-row">
+    <label>n:</label>
+    <input id="dimension" type="number" value="3" min="2" max="8">
+    <button onclick="generarMatriz()">Generar</button>
+  </div>
+
+  <div id="matriz-container"></div>
+
+  <div class="input-row">
+    <label>Tol:</label>
+    <input id="tolSistema" value="1e-6" type="number" step="any">
+
+    <label>Iter:</label>
+    <input id="iterSistema" value="100" type="number">
+  </div>
+
+  <button onclick="resolverSistema()">Resolver</button>
+
+  <h3>Tabla de Iteraciones</h3>
+  <div class="table-container">
+    <table id="tablaSistema">
+      <thead>
+        <tr><th>n</th><th>x</th><th>Eabs</th><th>Er1</th><th>Er2</th><th>Er3</th><th>Er4</th></tr>
+      </thead>
+      <tbody></tbody>
+    </table>
+  </div>
+
+  <div class="chart-box">
+    <h4>Convergencia</h4>
+    <canvas id="graficaSistema"></canvas>
+  </div>
+</div>
+
+<!-- ========== PARTE 3: INTERPOLACIÓN (AHORA CON INTERFAZ BLANCA) ========== -->
+<div id="tab-interpolacion" class="tab-content">
+  
+  <div class="interp-layout">
+    
+    <!-- Panel izquierdo -->
+    <div class="interp-panel">
+      <div class="interp-panel-title">📊 Datos de entrada</div>
+
+      <div class="interp-field">
+        <label>Puntos (x, y) — máx. 10</label>
+        <div class="interp-puntos-grid" style="margin-bottom:4px">
+          <span class="interp-punto-label">x</span>
+          <span class="interp-punto-label">y</span>
+          <span></span>
+        </div>
+        <div id="interp-puntos-container"></div>
+        <button class="interp-btn-add" id="interp-btn-agregar">+ Agregar punto</button>
+      </div>
+
+      <div class="interp-sep"></div>
+
+      <div class="interp-field">
+        <label>Método</label>
+        <select id="interp-metodo">
+          <option value="vandermonde">Vandermonde</option>
+          <option value="newton">Newton (Dif. Divididas)</option>
+          <option value="lagrange">Lagrange</option>
+          <option value="spline_lineal">Spline Lineal</option>
+          <option value="spline_cuadratico">Spline Cuadrático</option>
+          <option value="spline_cubico">Spline Cúbico</option>
+        </select>
+      </div>
+
+      <div class="interp-sep"></div>
+
+      <div class="interp-field">
+        <label>% datos para validación</label>
+        <div class="interp-val-opts">
+          <div class="interp-val-badge active" data-pct="0">Ninguno</div>
+          <div class="interp-val-badge" data-pct="10">10%</div>
+          <div class="interp-val-badge" data-pct="20">20%</div>
+          <div class="interp-val-badge" data-pct="30">30%</div>
+        </div>
+      </div>
+
+      <div class="interp-sep"></div>
+
+      <button class="interp-btn interp-btn-primary" id="interp-calcular">Calcular interpolación</button>
+      <div style="margin-top:8px">
+        <button class="interp-btn interp-btn-secondary" id="interp-limpiar">Limpiar</button>
+        <button class="interp-btn interp-btn-secondary" id="interp-ejemplo">Ejemplo</button>
+      </div>
+
+      <div id="interp-msg" class="interp-msg"></div>
+    </div>
+
+    <!-- Panel derecho -->
+    <div>
+      <div id="interp-placeholder" class="interp-panel" style="text-align:center;padding:60px 20px">
+        <div style="font-size:2.5rem;margin-bottom:14px">𝑃(𝑥)</div>
+        <div style="color:#718096;font-size:0.9rem">
+          Ingresa los puntos y presiona<br><strong style="color:#4a5568">Calcular</strong> para ver los resultados
+        </div>
+      </div>
+
+      <div id="interp-resultados" class="hidden">
+        <div class="interp-resultado-box">
+          <h3>📈 Polinomio interpolante</h3>
+          <div id="interp-poly-out" class="interp-poly-display"></div>
+          <div id="interp-dominio-out" class="interp-dominio-badge"></div>
+          <div id="interp-tramos-out" class="interp-tramos-container hidden"></div>
+          <div id="interp-error-val-out" class="interp-error-val hidden"></div>
+        </div>
+
+        <div class="interp-resultado-box">
+          <h3>📋 Tabla de puntos</h3>
+          <div class="interp-table-wrap">
+            <table>
+              <thead>
+                <tr><th>#</th><th>x</th><th>y real</th><th>P(x)</th><th>Error abs.</th><th>Rol</th></tr>
+              </thead>
+              <tbody id="interp-tabla-body"></tbody>
+            </table>
+          </div>
+        </div>
+
+        <div class="interp-charts-grid">
+          <div class="interp-chart-box">
+            <h4>📉 Polinomio interpolante</h4>
+            <canvas id="interp-grafica"></canvas>
+          </div>
+          <div class="interp-chart-box">
+            <h4>📊 Error de interpolación</h4>
+            <canvas id="interp-grafica-error"></canvas>
+          </div>
+        </div>
+      </div>
+    </div>
+
+  </div>
+</div>
+
+</div>
+
+<script>
+// ==================== PARTES 1 y 2: TODO SIN MODIFICAR ====================
+let chart1=null, chart2=null;
+let activeInput = null;
+
+function cambiarTab(tabId){
+  const btn = event ? event.currentTarget : document.querySelector(`.tab-btn[onclick*="${tabId}"]`);
+  if(btn) document.querySelectorAll('.tab-btn').forEach(b=>b.classList.remove('active'));
+  if(btn) btn.classList.add('active');
+  document.querySelectorAll('.tab-content').forEach(c=>c.classList.remove('active'));
+  document.getElementById('tab-'+tabId).classList.add('active');
+  
+  if(chart1){chart1.destroy();chart1=null}
+  if(chart2){chart2.destroy();chart2=null}
+}
+
+function toggleGeoGebra(){
+  const content = document.getElementById('geoContent');
+  const icon = document.getElementById('geoToggle');
+  content.classList.toggle('collapsed');
+  icon.classList.toggle('collapsed');
+}
+
+document.querySelectorAll('.func-input').forEach(inp => {
+  inp.addEventListener('focus', e => {
+    document.querySelectorAll('.func-input').forEach(i => i.classList.remove('active-input'));
+    activeInput = e.target;
+    activeInput.classList.add('active-input');
+  });
+});
+
+function insertar(texto){
+  if(!activeInput){ 
+    mostrarMensaje('Haz clic primero en f(x) o g(x) para seleccionar dónde insertar.', 'warning'); 
+    return; 
+  }
+  const start = activeInput.selectionStart;
+  const end = activeInput.selectionEnd;
+  const val = activeInput.value;
+  activeInput.value = val.substring(0, start) + texto + val.substring(end);
+  activeInput.focus();
+}
+
+function actualizarInputs(){
+    let m=document.getElementById("metodo").value;
+    document.getElementById("gxbox").classList.toggle("hidden", m!=="puntoFijo");
+    let usaX1 = (m==="biseccion" || m==="reglaFalsa" || m==="secante");
+    document.getElementById("x1box").style.display = usaX1 ? "inline" : "none";
+    
+    if(m==="puntoFijo" && document.getElementById("gx").value===""){
+        generarGxAutomatico();
+    }
+}
+
+function generarGxAutomatico(){
+    let fx = document.getElementById("funcion").value;
+    let gx = "";
+    
+    if(fx.includes("x^3")){
+        gx = "(x+2)^(1/3)";
+    }else if(fx.includes("x^2")){
+        gx = "sqrt(x+1)";
+    }else if(fx.includes("cos(") || fx.includes("sin(")){
+        gx = "x - (1/2)*(" + fx + ")";
+    }else{
+        gx = "x - 0.1*(" + fx + ")";
+    }
+    
+    document.getElementById("gx").value = gx;
+}
+
+function f(x){
+    try{
+        return math.evaluate(document.getElementById("funcion").value,{x});
+    }catch(e){
+        throw new Error("Error al evaluar f(x): "+e.message);
+    }
+}
+
+function g(x){
+    try{
+        return math.evaluate(document.getElementById("gx").value,{x});
+    }catch(e){
+        throw new Error("Error al evaluar g(x): "+e.message);
+    }
+}
+
+function df(x){
+    try{
+        return math.derivative(document.getElementById("funcion").value,'x').evaluate({x});
+    }catch(e){
+        throw new Error("Error al calcular derivada: "+e.message);
+    }
+}
+
+function d2f(x){
+    try{
+        return math.derivative(math.derivative(document.getElementById("funcion").value,'x'),'x').evaluate({x});
+    }catch(e){
+        throw new Error("Error al calcular segunda derivada: "+e.message);
+    }
+}
+
+function errores(prev,curr){
+    return {
+        ea: Math.abs(curr-prev),
+        er1: curr!==0 ? Math.abs((curr-prev)/curr) : Infinity,
+        er2: prev!==0 ? Math.abs((curr-prev)/prev) : Infinity
+    };
+}
+
+function cumpleCriterio(err,fx,criterio,tol){
+    if(criterio==="ea") return err.ea < tol;
+    if(criterio==="er1") return err.er1 < tol;
+    if(criterio==="er2") return err.er2 < tol;
+    if(criterio==="fx") return Math.abs(fx) < tol;
+    return false;
+}
+
+function mostrarMensaje(msg, tipo = 'error'){
+    const div = document.getElementById('mensaje');
+    div.textContent = msg;
+    div.className = tipo;
+    div.style.display = 'block';
+    setTimeout(()=>{ div.style.display='none'; }, 10000);
+}
+
+function limpiarMensaje(){
+    const div = document.getElementById('mensaje');
+    div.style.display='none';
+    div.textContent='';
+    div.className='';
+}
+
+function limpiarTodo(){
+    document.getElementById("tabla").querySelector("tbody").innerHTML = "";
+    document.getElementById("resultado").innerHTML = "";
+    document.getElementById("mensaje").style.display = "none";
+    if(chart1){chart1.destroy();chart1=null}
+    if(chart2){chart2.destroy();chart2=null}
+}
+
+function graficarFuncion(f, xMin, xMax, raiz=null){
+    const ctx = document.getElementById("grafica").getContext("2d");
+    if(chart1) chart1.destroy();
+
+    const xs=[], ys=[];
+    let ymin=Infinity, ymax=-Infinity;
+    
+    for(let x=xMin; x<=xMax; x+=(xMax-xMin)/200){
+        try{
+            const y = f(x);
+            if(isFinite(y)){
+                xs.push(x.toFixed(3));
+                ys.push(y);
+                ymin = Math.min(ymin,y);
+                ymax = Math.max(ymax,y);
+            }
+        }catch(e){}
+    }
+
+    const rango = ymax-ymin;
+    ymin -= rango*0.1;
+    ymax += rango*0.1;
+
+    const datasets = [];
+
+    datasets.push({
+        label:'f(x)',
+        data:ys,
+        borderColor:'#4a5568',
+        backgroundColor:'rgba(74,85,104,0.1)',
+        fill:true,
+        borderWidth:2,
+        pointRadius:0,
+        tension:0.3
+    });
+
+    if(raiz!==null){
+        const rootIndex = Math.floor((raiz-xMin)/((xMax-xMin)/200));
+        const rootData = [];
+        for(let i=0;i<xs.length;i++){
+            rootData.push(i===rootIndex?ys[i]:null);
+        }
+        datasets.push({
+            label:'Raíz',
+            data:rootData,
+            borderColor:'#e53e3e',
+            backgroundColor:'rgba(229,62,62,0.3)',
+            pointRadius:6,
+            showLine:false
+        });
+    }
+
+    chart1=new Chart(ctx,{
+        type:'line',
+        data:{labels:xs,datasets:datasets},
+        options:{
+            responsive:true,
+            maintainAspectRatio:false,
+            plugins:{
+                title:{display:true,text:raiz?('f(x) - Raíz: '+raiz.toFixed(6)):'f(x)',font:{size:14}},
+                legend:{display:true}
+            },
+            scales:{
+                x:{title:{display:true,text:'x'},grid:{color:'#e2e8f0'}},
+                y:{title:{display:true,text:'f(x)'},grid:{color:'#e2e8f0'},min:ymin,max:ymax}
+            }
+        }
+    });
+}
+
+function graficarErrores(datos){
+    const ctx = document.getElementById("error").getContext("2d");
+    if(chart2) chart2.destroy();
+
+    const labels = datos.map(d=>d.n);
+    
+    chart2=new Chart(ctx,{
+        type:'line',
+        data:{
+            labels:labels,
+            datasets:[
+                {label:'Error absoluto', data:datos.map(d=>d.ea!==null?d.ea:NaN), borderColor:'#e53e3e', fill:false, pointRadius:3, tension:0.2},
+                {label:'Error relativo 1', data:datos.map(d=>d.er1!==null && isFinite(d.er1)?d.er1:NaN), borderColor:'#38a169', fill:false, pointRadius:3, tension:0.2},
+                {label:'Error relativo 2', data:datos.map(d=>d.er2!==null && isFinite(d.er2)?d.er2:NaN), borderColor:'#dd6b20', fill:false, pointRadius:3, tension:0.2},
+                {label:'|f(x)|', data:datos.map(d=>d.fxAbs!==null?d.fxAbs:NaN), borderColor:'#667eea', fill:false, pointRadius:3, tension:0.2, borderDash:[5,5]}
+            ]
+        },
+        options:{
+            responsive:true,
+            maintainAspectRatio:false,
+            plugins:{
+                title:{display:true,text:'Convergencia: Errores y |f(x)|',font:{size:14}},
+                legend:{display:true}
+            },
+            scales:{
+                x:{title:{display:true,text:'Iteración'},grid:{color:'#e2e8f0'}},
+                y:{title:{display:true,text:'Valor'},type:'logarithmic',grid:{color:'#e2e8f0'}}
+            }
+        }
+    });
+}
+
+function calcular(){
+try{
+    limpiarMensaje();
+    limpiarTodo();
+
+    let m=document.getElementById("metodo").value;
+    let criterio=document.getElementById("criterio").value;
+    let x0=parseFloat(document.getElementById("x0").value);
+    let x1=parseFloat(document.getElementById("x1").value);
+    let tol=parseFloat(document.getElementById("tol").value);
+    let niter=parseInt(document.getElementById("niter").value);
+
+    if(isNaN(x0)){
+        mostrarMensaje('Error: x0 debe ser numérico');
+        return;
+    }
+
+    if(m==="biseccion" || m==="reglaFalsa" || m==="secante"){
+        if(isNaN(x1)){
+            mostrarMensaje('Error: x1 es requerido');
+            return;
+        }
+        if(x0===x1){
+            mostrarMensaje('Error: x0 y x1 no pueden ser iguales');
+            return;
+        }
+    }
+
+    if(isNaN(tol) || tol<=0){
+        mostrarMensaje('Error: tolerancia inválida');
+        return;
+    }
+
+    if(isNaN(niter) || niter<=0){
+        mostrarMensaje('Error: iteraciones inválidas');
+        return;
+    }
+
+    let funcExpr = document.getElementById("funcion").value.trim();
+    if(!funcExpr){
+        mostrarMensaje('Error: f(x) vacía');
+        return;
+    }
+
+    try{
+        math.evaluate(funcExpr, {x: x0});
+    }catch(e){
+        mostrarMensaje('Error en f(x): '+e.message);
+        return;
+    }
+
+    let fx0 = f(x0);
+
+    if(!isFinite(fx0)){
+        mostrarMensaje('Error: f(x0) no es finito');
+        return;
+    }
+
+    if(m==="newton"){
+        let dfx0 = df(x0);
+        if(!isFinite(dfx0)){
+            mostrarMensaje('Error: derivada no definida en x0');
+	    graficarFuncion(f, x0-5, x1+5);
+            return;
+        }
+        if(Math.abs(dfx0) < 1e-12){
+            mostrarMensaje('ERROR: f\'(x0) ≈ 0 → Newton falla (división por cero)');
+            graficarFuncion(f, x0-5, x1+5);
+            return;
+        }
+    }
+
+    if(m==="secante"){
+        let denom = f(x1)-f(x0);
+        if(Math.abs(denom) < 1e-12){
+            mostrarMensaje('Error: f(x1) ≈ f(x0) → Secante falla');
+	    graficarFuncion(f, x0-5, x1+5);
+            return;
+        }
+    }
+
+    if(m==="biseccion" || m==="reglaFalsa"){
+        let fa=f(x0), fb=f(x1);
+        if(!isFinite(fa) || !isFinite(fb)){
+            mostrarMensaje('Error: f(x0) o f(x1) inválidos');
+            graficarFuncion(f, x0-5, x1+5);
+            return;
+        }
+        if(fa*fb > 0){
+            mostrarMensaje('ERROR: No hay cambio de signo. f(x0)='+fa.toExponential(3)+', f(x1)='+fb.toExponential(3));
+            graficarFuncion(f, x0-5, x1+5);
+            return;
+        }
+    }
+
+    if(m==="puntoFijo"){
+        try{
+            let dg = math.derivative(document.getElementById("gx").value,'x').evaluate({x:x0});
+            if(Math.abs(dg)>=1){
+                mostrarMensaje('Advertencia: |g\'(x0)| ≥ 1 → puede no converger','warning');
+            }
+        }catch(e){}
+    }
+
+    let datos=[];
+    let x_prev=x0;
+    let convergio=false;
+    let solucion=null;
+
+    datos.push({n:0, x:x0, fx:fx0, fxAbs:Math.abs(fx0), ea:null, er1:null, er2:null});
+
+    for(let i=1; i<=niter; i++){
+    let xn, fxn;
+
+    if(m==="newton"){
+        let dfx = df(x_prev);
+        if(Math.abs(dfx) < 1e-12){
+            mostrarMensaje('Error iter '+i+': f\'(x) ≈ 0');
+            break;
+        }
+        xn = x_prev - f(x_prev)/dfx;
+    }
+
+    else if(m==="secante"){
+        let f0 = f(x0), f1 = f(x1);
+        let denom = f1 - f0;
+
+        if(Math.abs(denom) < 1e-12){
+            mostrarMensaje('Error iter '+i+': denominador ≈ 0');
+            break;
+        }
+
+        xn = x1 - f1*(x1-x0)/denom;
+    }
+
+    else if(m==="biseccion"){
+        xn = (x0+x1)/2;
+    }
+
+    else if(m==="reglaFalsa"){
+        let fa=f(x0), fb=f(x1);
+        let denom = fb-fa;
+
+        if(Math.abs(denom) < 1e-12){
+            mostrarMensaje('Error iter '+i+': denominador ≈ 0');
+            graficarFuncion(f, x0-5, x1+5);
+            break;
+        }
+
+        xn = x1 - fb*(x1-x0)/denom;
+    }
+
+    else if(m==="puntoFijo"){
+        xn = g(x_prev);
+    }
+
+    else if(m==="raicesMultiples"){
+        let fx0v=f(x_prev), dfx0=df(x_prev), d2fx0=d2f(x_prev);
+        let denom = dfx0*dfx0 - fx0v*d2fx0;
+
+        if(Math.abs(denom) < 1e-12){
+            mostrarMensaje('Error iter '+i+': denominador ≈ 0');
+            graficarFuncion(f, x0-5, x1+5);
+            break;
+        }
+
+        xn = x_prev - (fx0v*dfx0)/denom;
+    }
+
+    fxn = f(xn);
+
+    let ea = Math.abs(xn - x_prev);
+    let er1 = Math.abs(xn) > 1e-12 ? ea / Math.abs(xn) : Infinity;
+    let er2 = Math.abs(x_prev) > 1e-12 ? ea / Math.abs(x_prev) : Infinity;
+    let fxAbs = Math.abs(fxn);
+
+    datos.push({
+        n:i,
+        x:xn,
+        fx:fxn,
+        fxAbs:fxAbs,
+        ea:ea,
+        er1:er1,
+        er2:er2
+    });
+
+    if(Math.abs(fxn) < tol){
+    	convergio = true;
+    	solucion = xn;
+    	break;
+    }
+
+    if(cumpleCriterio({ea,er1,er2}, fxn, criterio, tol)){
+        convergio = true;
+        solucion = xn;
+        break;
+    }
+
+    if(m==="secante"){
+        x0 = x1;
+        x1 = xn;
+    }
+    else if(m==="biseccion" || m==="reglaFalsa"){
+        if(f(x0)*fxn < 0) x1 = xn;
+        else x0 = xn;
+    }
+
+    x_prev = xn;
+}
+    if(!convergio){
+        solucion = datos[datos.length-1].x;
+        mostrarMensaje('No convergió en '+niter+' iteraciones','warning');
+    }
+
+    document.getElementById("resultado").innerHTML = 
+        '<span style="color:'+(convergio?'#276749':'#c05621')+'">' +
+        (convergio?'✓ ':'✗ ') + 
+        'Resultado: '+solucion.toExponential(8)+'<br>Iteraciones: '+(datos.length-1)+'</span>';
+
+    let tbody = document.getElementById("tabla").querySelector("tbody");
+    tbody.innerHTML = "";
+
+    datos.forEach(d=>{
+        let tr = document.createElement("tr");
+        tr.innerHTML = 
+            '<td>'+d.n+'</td>'+
+            '<td>'+(d.x!==null?d.x.toExponential(6):'-')+'</td>'+
+            '<td>'+(d.fx!==null?d.fx.toExponential(6):'-')+'</td>'+
+            '<td>'+(d.fxAbs!==null?d.fxAbs.toExponential(6):'-')+'</td>'+
+            '<td>'+(d.ea!==null?d.ea.toExponential(4):'-')+'</td>'+
+            '<td>'+(d.er1!==null && isFinite(d.er1)?d.er1.toExponential(4):'-')+'</td>'+
+            '<td>'+(d.er2!==null && isFinite(d.er2)?d.er2.toExponential(4):'-')+'</td>';
+        tbody.appendChild(tr);
+    });
+
+    const xMin = Math.min(x0, x1||x0-5) - 3;
+    const xMax = Math.max(x0, x1||x0+5) + 3;
+    graficarFuncion(f, xMin, xMax, convergio?solucion:null);
+    
+    if(datos.length > 1){
+        graficarErrores(datos);
+    }
+
+}catch(e){
+    mostrarMensaje('Error: '+e.message);
+    console.error(e);
+}
+}
+
+actualizarInputs();
+
+function generarMatriz(){
+    let n = parseInt(document.getElementById("dimension").value);
+    let cont = document.getElementById("matriz-container");
+
+    let html = "<h4>Matriz A</h4>";
+    for(let i=0;i<n;i++){
+        for(let j=0;j<n;j++){
+            html += `<input type="number" id="a_${i}_${j}" value="${i===j?5:1}" step="any" style="width:60px">`;
+        }
+        html += "<br>";
+    }
+
+    html += "<h4>Vector b</h4>";
+    for(let i=0;i<n;i++){
+        html += `<input type="number" id="b_${i}" value="1" step="any" style="width:60px"><br>`;
+    }
+
+    html += "<h4>x0</h4>";
+    for(let i=0;i<n;i++){
+        html += `<input type="number" id="x0_${i}" value="0" step="any" style="width:60px"><br>`;
+    }
+
+    cont.innerHTML = html;
+}
+
+function normaInf(v){
+    return Math.max(...v.map(x => Math.abs(x)));
+}
+function calcularErroresVec(xn, xprev){
+    let diff = xn.map((v,i)=>v - xprev[i]);
+
+    let ea = normaInf(diff);
+
+    let er1 = ea / (normaInf(xn) || Infinity);
+    let er2 = ea / (normaInf(xprev) || Infinity);
+
+    let er3 = normaInf(xn.map((v,i)=> (v - xprev[i])/(v||Infinity)));
+    let er4 = normaInf(xprev.map((v,i)=> (xn[i] - v)/(v||Infinity)));
+
+    return {ea, er1, er2, er3, er4};
+}
+function iteracionSistema(A,b,x,metodo,omega){
+    let n = x.length;
+    let xn = [...x];
+
+    for(let i=0;i<n;i++){
+        let suma = 0;
+
+        for(let j=0;j<n;j++){
+            if(j!==i){
+                if(metodo==="jacobi"){
+                    suma += A[i][j]*x[j];
+                }else{
+                    suma += A[i][j]*xn[j];
+                }
+            }
+        }
+
+        let nuevo = (b[i] - suma)/A[i][i];
+
+        if(metodo==="sor"){
+            xn[i] = (1-omega)*x[i] + omega*nuevo;
+        }else{
+            xn[i] = nuevo;
+        }
+    }
+
+    return xn;
+}
+
+function resolverSistema(){
+    let n = parseInt(document.getElementById("dimension").value);
+    let metodo = document.getElementById("metodoSistema").value;
+    let omega = parseFloat(document.getElementById("omega").value);
+    let tol = parseFloat(document.getElementById("tolSistema").value);
+    let maxIter = parseInt(document.getElementById("iterSistema").value);
+
+    let A = [], b = [], x = [];
+
+    for(let i=0;i<n;i++){
+        A[i]=[];
+        for(let j=0;j<n;j++){
+            A[i][j] = parseFloat(document.getElementById(`a_${i}_${j}`).value);
+        }
+        b[i] = parseFloat(document.getElementById(`b_${i}`).value);
+        x[i] = parseFloat(document.getElementById(`x0_${i}`).value);
+    }
+     // ===== VERIFICAR CEROS EN LA DIAGONAL =====
+    for(let i = 0; i < n; i++){
+        if(A[i][i] === 0){
+            alert("Error: hay un cero en la diagonal principal.");
+            return;
+        }
+    }
+
+    let datos = [];
+    let chartData = [];
+
+    let convergio = false;
+
+    for(let k=1;k<=maxIter;k++){
+        let xn = iteracionSistema(A,b,x,metodo,omega);
+
+        let err = calcularErroresVec(xn,x);
+
+        datos.push({
+            n:k,
+            x:[...xn],
+            ...err
+        });
+
+        chartData.push({
+            ea: err.ea,
+            er1: err.er1,
+            er2: err.er2,
+            er3: err.er3,
+            er4: err.er4
+        });
+
+        if(err.ea < tol){
+          convergio = true;
+            break;
+        }
+
+        x = xn;
+    }
+
+    if(convergio){
+    alert("El método convergió correctamente.");
+    }else{
+    alert("El método NO convergió.");
+    }
+
+
+
+    let tbody = document.querySelector("#tablaSistema tbody");
+    tbody.innerHTML = "";
+
+    datos.forEach(d=>{
+        let tr = document.createElement("tr");
+        tr.innerHTML = `
+        <td>${d.n}</td>
+        <td>[${d.x.map(v=>v.toFixed(4)).join(", ")}]</td>
+        <td>${d.ea.toExponential(3)}</td>
+        <td>${d.er1.toExponential(3)}</td>
+        <td>${d.er2.toExponential(3)}</td>
+        <td>${d.er3.toExponential(3)}</td>
+        <td>${d.er4.toExponential(3)}</td>`;
+        tbody.appendChild(tr);
+    });
+
+    graficarSistema(chartData);
+}
+
+let chartSistema=null;
+
+function graficarSistema(data){
+    const ctx = document.getElementById("graficaSistema").getContext("2d");
+
+    if(chartSistema) chartSistema.destroy();
+
+    chartSistema = new Chart(ctx,{
+        type:'line',
+        data:{
+            labels: data.map((_,i)=>i+1),
+            datasets:[
+                {label:'Eabs', data:data.map(d=>d.ea)},
+                {label:'Er1', data:data.map(d=>d.er1)},
+                {label:'Er2', data:data.map(d=>d.er2)},
+                {label:'Er3', data:data.map(d=>d.er3)},
+                {label:'Er4', data:data.map(d=>d.er4)}
+            ]
+        },
+        options:{
+            scales:{
+                y:{type:'logarithmic'}
+            }
+        }
+    });
+}
+
+// ==================== PARTE 3: INTERPOLACIÓN (FUNCIONALIDAD ORIGINAL, ESTILOS BLANCOS) ====================
+let interpPuntos = [];
+let interpPctVal = 0;
+let interpChart1 = null, interpChart2 = null;
+
+function interpCargarEjemplo() {
+  interpPuntos = [
+    {x:0, y:1},
+    {x:1, y:2.718},
+    {x:2, y:7.389},
+    {x:3, y:20.086},
+    {x:4, y:54.598},
+  ];
+  interpRenderPuntos();
+}
+
+function interpRenderPuntos() {
+  const cont = document.getElementById('interp-puntos-container');
+  if (!cont) return;
+  cont.innerHTML = '';
+  interpPuntos.forEach((p, i) => {
+    const row = document.createElement('div');
+    row.className = 'interp-puntos-grid';
+    row.style.marginBottom = '6px';
+
+    const inX = document.createElement('input');
+    inX.type = 'number'; inX.step = 'any'; inX.value = p.x; inX.placeholder = 'x' + i;
+    inX.addEventListener('input', function(){ interpPuntos[i].x = parseFloat(this.value) || 0; });
+
+    const inY = document.createElement('input');
+    inY.type = 'number'; inY.step = 'any'; inY.value = p.y; inY.placeholder = 'y' + i;
+    inY.addEventListener('input', function(){ interpPuntos[i].y = parseFloat(this.value) || 0; });
+
+    const btnDel = document.createElement('button');
+    btnDel.className = 'interp-btn-del';
+    btnDel.textContent = '×';
+    btnDel.addEventListener('click', function(){ interpEliminarPunto(i); });
+
+    row.appendChild(inX);
+    row.appendChild(inY);
+    row.appendChild(btnDel);
+    cont.appendChild(row);
+  });
+}
+
+function interpAgregarPunto() {
+  if (interpPuntos.length >= 10) { interpMostrarMsg('Máximo 10 puntos permitidos', 'warning'); return; }
+  interpPuntos.push({x: 0, y: 0});
+  interpRenderPuntos();
+}
+
+function interpEliminarPunto(i) {
+  if (interpPuntos.length <= 2) { interpMostrarMsg('Necesitas al menos 2 puntos', 'warning'); return; }
+  interpPuntos.splice(i, 1);
+  interpRenderPuntos();
+}
+
+function interpSeleccionarVal(el, pct) {
+  document.querySelectorAll('#tab-interpolacion .interp-val-badge').forEach(b => b.classList.remove('active'));
+  el.classList.add('active');
+  interpPctVal = pct;
+}
+
+
+function interpMostrarMsg(txt, tipo) {
+  const el = document.getElementById('interp-msg');
+  if (!el) return;
+  el.className = 'interp-msg ' + tipo;
+  el.textContent = txt;
+  setTimeout(() => el.className = 'interp-msg', 4000);
+}
+
+function interpLimpiar() {
+  document.getElementById('interp-resultados').classList.add('hidden');
+  document.getElementById('interp-placeholder').classList.remove('hidden');
+  document.getElementById('interp-msg').className = 'interp-msg';
+}
+
+function interpLeerPuntos() {
+  const inputs = document.querySelectorAll('#interp-puntos-container .interp-puntos-grid input[type="number"]');
+  const pts = [];
+  for (let i = 0; i < inputs.length; i += 2) {
+    pts.push({ x: parseFloat(inputs[i].value), y: parseFloat(inputs[i+1].value) });
+  }
+  return pts;
+}
+
+function interpGaussElim(A, b) {
+  const n = b.length;
+  let M = A.map((r,i) => [...r, b[i]]);
+
+  for (let col = 0; col < n; col++) {
+    let maxRow = col;
+    for (let row = col+1; row < n; row++)
+      if (Math.abs(M[row][col]) > Math.abs(M[maxRow][col])) maxRow = row;
+    [M[col], M[maxRow]] = [M[maxRow], M[col]];
+
+    if (Math.abs(M[col][col]) < 1e-14) throw new Error('Sistema singular o mal condicionado');
+
+    for (let row = col+1; row < n; row++) {
+      const f = M[row][col] / M[col][col];
+      for (let k = col; k <= n; k++) M[row][k] -= f * M[col][k];
+    }
+  }
+
+  const x = new Array(n).fill(0);
+  for (let i = n-1; i >= 0; i--) {
+    x[i] = M[i][n];
+    for (let j = i+1; j < n; j++) x[i] -= M[i][j] * x[j];
+    x[i] /= M[i][i];
+  }
+  return x;
+}
+
+function interpMetodoVandermonde(pts, orden) {
+  const n = Math.min(orden + 1, pts.length);
+  const usados = pts.slice(0, n);
+  const N = usados.length;
+
+  let A = [], b = [];
+  for (let i = 0; i < N; i++) {
+    A[i] = [];
+    for (let j = 0; j < N; j++) {
+      A[i][j] = Math.pow(usados[i].x, N - 1 - j);
+    }
+    b[i] = usados[i].y;
+  }
+
+  const coefs = interpGaussElim(A, b);
+
+  const evaluar = x => coefs.reduce((acc, c, i) => acc + c * Math.pow(x, N - 1 - i), 0);
+
+  const terms = coefs.map((c, i) => {
+    const exp = N - 1 - i;
+    if (Math.abs(c) < 1e-12) return null;
+    const cStr = interpFormatNum(c);
+    if (exp === 0) return cStr;
+    if (exp === 1) return `${cStr}x`;
+    return `${cStr}x^${exp}`;
+  }).filter(Boolean);
+
+  return {
+    tipo: 'global',
+    polinomio: terms.join(' + ').replace(/\+ -/g, '- '),
+    evaluar,
+    dominio: [usados[0].x, usados[usados.length-1].x]
+  };
+}
+
+function interpMetodoNewton(pts, orden) {
+  const n = Math.min(orden + 1, pts.length);
+  const usados = pts.slice(0, n);
+  const N = usados.length;
+
+  let tabla = usados.map(p => [p.y]);
+  for (let j = 1; j < N; j++) {
+    for (let i = 0; i < N - j; i++) {
+      tabla[i][j] = (tabla[i+1][j-1] - tabla[i][j-1]) / (usados[i+j].x - usados[i].x);
+    }
+  }
+
+  const coefs = tabla[0];
+  const xs = usados.map(p => p.x);
+
+  const evaluar = x => {
+    let result = 0;
+    for (let i = 0; i < N; i++) {
+      let term = coefs[i];
+      for (let j = 0; j < i; j++) term *= (x - xs[j]);
+      result += term;
+    }
+    return result;
+  };
+
+  let terms = [interpFormatNum(coefs[0])];
+  for (let i = 1; i < N; i++) {
+    if (Math.abs(coefs[i]) < 1e-12) continue;
+    let t = interpFormatNum(coefs[i]);
+    for (let j = 0; j < i; j++) {
+      const sign = xs[j] >= 0 ? `-${interpFormatNum(xs[j])}` : `+${interpFormatNum(Math.abs(xs[j]))}`;
+      t += `(x${sign})`;
+    }
+    terms.push(t);
+  }
+
+  return {
+    tipo: 'global',
+    polinomio: terms.join(' + ').replace(/\+ -/g, '- '),
+    evaluar,
+    dominio: [usados[0].x, usados[usados.length-1].x]
+  };
+}
+
+function interpMetodoLagrange(pts) {
+  const n = pts.length;
+  const xs = pts.map(p => p.x);
+  const ys = pts.map(p => p.y);
+
+  const evaluar = x => {
+    let result = 0;
+    for (let i = 0; i < n; i++) {
+      let Li = 1;
+      for (let j = 0; j < n; j++) {
+        if (j !== i) Li *= (x - xs[j]) / (xs[i] - xs[j]);
+      }
+      result += ys[i] * Li;
+    }
+    return result;
+  };
+
+  return {
+    tipo: 'global',
+    polinomio: `L(x) = Σ yᵢ·Lᵢ(x) [${n} nodos]`,
+    evaluar,
+    dominio: [xs[0], xs[xs.length-1]]
+  };
+}
+
+function interpSplineLineal(pts) {
+  const n = pts.length;
+  const tramos = [];
+
+  for (let i = 0; i < n - 1; i++) {
+    const x0 = pts[i].x, y0 = pts[i].y;
+    const x1 = pts[i+1].x, y1 = pts[i+1].y;
+    const m = (y1 - y0) / (x1 - x0);
+    const b = y0 - m * x0;
+    tramos.push({
+      xMin: x0, xMax: x1,
+      poly: `${interpFormatNum(m)}x ${b >= 0 ? '+' : '-'} ${interpFormatNum(Math.abs(b))}`,
+      evaluar: x => m * x + b
+    });
+  }
+
+  const evaluar = x => {
+    for (const t of tramos) {
+      if (x >= t.xMin && x <= t.xMax) return t.evaluar(x);
+    }
+    if (x < tramos[0].xMin) return tramos[0].evaluar(x);
+    return tramos[tramos.length-1].evaluar(x);
+  };
+
+  return {
+    tipo: 'spline',
+    tramos,
+    evaluar,
+    dominio: [pts[0].x, pts[n-1].x]
+  };
+}
+
+function interpSplineCuadratico(pts) {
+  const n = pts.length;
+  const m = n - 1;
+  const N = 3 * m;
+  let A = Array.from({length:N}, ()=>new Array(N).fill(0));
+  let b = new Array(N).fill(0);
+  let eq = 0;
+
+  A[eq][0] = 1; b[eq] = 0; eq++;
+
+  for (let i = 0; i < m; i++) {
+    const x0 = pts[i].x, y0 = pts[i].y;
+    const x1 = pts[i+1].x, y1 = pts[i+1].y;
+    const base = 3 * i;
+
+    A[eq][base]   = x0*x0;
+    A[eq][base+1] = x0;
+    A[eq][base+2] = 1;
+    b[eq] = y0; eq++;
+
+    A[eq][base]   = x1*x1;
+    A[eq][base+1] = x1;
+    A[eq][base+2] = 1;
+    b[eq] = y1; eq++;
+  }
+
+  for (let i = 0; i < m - 1; i++) {
+    const x1 = pts[i+1].x;
+    const base = 3 * i;
+    A[eq][base]     =  2*x1;
+    A[eq][base+1]   =  1;
+    A[eq][base+3]   = -2*x1;
+    A[eq][base+4]   = -1;
+    b[eq] = 0; eq++;
+  }
+
+  const coefs = interpGaussElim(A, b);
+
+  const tramos = [];
+  for (let i = 0; i < m; i++) {
+    const a = coefs[3*i], bk = coefs[3*i+1], c = coefs[3*i+2];
+    tramos.push({
+      xMin: pts[i].x, xMax: pts[i+1].x,
+      poly: `${interpFormatNum(a)}x² ${bk>=0?'+':'-'} ${interpFormatNum(Math.abs(bk))}x ${c>=0?'+':'-'} ${interpFormatNum(Math.abs(c))}`,
+      evaluar: x => a*x*x + bk*x + c
+    });
+  }
+
+  const evaluar = x => {
+    for (const t of tramos) if (x >= t.xMin && x <= t.xMax) return t.evaluar(x);
+    if (x < tramos[0].xMin) return tramos[0].evaluar(x);
+    return tramos[tramos.length-1].evaluar(x);
+  };
+
+  return { tipo: 'spline', tramos, evaluar, dominio: [pts[0].x, pts[n-1].x] };
+}
+
+function interpSplineCubico(pts) {
+  const n = pts.length;
+  const N = n - 1;
+
+  const h = [];
+  for (let i = 0; i < N; i++) h[i] = pts[i+1].x - pts[i].x;
+
+  const size = n - 2;
+  let matA = Array.from({length:size}, ()=>new Array(size).fill(0));
+  let rhs = new Array(size).fill(0);
+
+  for (let i = 0; i < size; i++) {
+    const idx = i + 1;
+    matA[i][i] = 2 * (h[idx-1] + h[idx]);
+    if (i > 0)        matA[i][i-1] = h[idx-1];
+    if (i < size-1)   matA[i][i+1] = h[idx];
+    rhs[i] = 6 * ((pts[idx+1].y - pts[idx].y)/h[idx] - (pts[idx].y - pts[idx-1].y)/h[idx-1]);
+  }
+
+  let M = new Array(n).fill(0);
+  if (size > 0) {
+    const Mint = interpGaussElim(matA, rhs);
+    for (let i = 0; i < size; i++) M[i+1] = Mint[i];
+  }
+
+  const tramos = [];
+  for (let i = 0; i < N; i++) {
+    const hi = h[i];
+    const xi = pts[i].x;
+    const evaluar = x => {
+      const dx = x - xi;
+      return (M[i+1] - M[i])/(6*hi)*dx*dx*dx
+           + M[i]/2*dx*dx
+           + ((pts[i+1].y - pts[i].y)/hi - hi*(2*M[i] + M[i+1])/6)*dx
+           + pts[i].y;
+    };
+    const a = (M[i+1] - M[i]) / (6*hi);
+    const b = M[i] / 2;
+    const c = (pts[i+1].y - pts[i].y)/hi - hi*(2*M[i] + M[i+1])/6;
+    const d = pts[i].y;
+    tramos.push({
+      xMin: pts[i].x, xMax: pts[i+1].x,
+      poly: `${interpFormatNum(a)}(x-${interpFormatNum(xi)})³ + ${interpFormatNum(b)}(x-${interpFormatNum(xi)})² + ${interpFormatNum(c)}(x-${interpFormatNum(xi)}) + ${interpFormatNum(d)}`,
+      evaluar
+    });
+  }
+
+  const evaluar = x => {
+    for (const t of tramos) if (x >= t.xMin && x <= t.xMax) return t.evaluar(x);
+    if (x < tramos[0].xMin) return tramos[0].evaluar(x);
+    return tramos[tramos.length-1].evaluar(x);
+  };
+
+  return { tipo: 'spline', tramos, evaluar, dominio: [pts[0].x, pts[n-1].x] };
+}
+
+function interpFormatNum(n) {
+  if (Math.abs(n) < 1e-10) return '0';
+  if (Number.isInteger(n)) return String(n);
+  return parseFloat(n.toPrecision(5)).toString();
+}
+
+function interpCalcular() {
+  try {
+    const pts = interpLeerPuntos();
+
+    if (pts.length < 2) { interpMostrarMsg('Necesitas al menos 2 puntos', 'error'); return; }
+    const xs = pts.map(p => p.x);
+    if (new Set(xs).size !== xs.length) { interpMostrarMsg('No puede haber valores x repetidos', 'error'); return; }
+    if (pts.some(p => isNaN(p.x) || isNaN(p.y))) { interpMostrarMsg('Hay valores inválidos en los puntos', 'error'); return; }
+
+    const ptsOrdenados = [...pts].sort((a,b) => a.x - b.x);
+    let trainPts = ptsOrdenados, valPts = [];
+
+    if (interpPctVal > 0) {
+      const nVal = Math.max(1, Math.floor(ptsOrdenados.length * interpPctVal / 100));
+      const internos = ptsOrdenados.slice(1, -1);
+      if (internos.length < nVal) {
+        interpMostrarMsg('No hay suficientes puntos internos para validar con ese %', 'warning');
+        valPts = [];
+        trainPts = ptsOrdenados;
+      } else {
+        const step = Math.floor(internos.length / nVal);
+        for (let i = 0; i < nVal; i++) valPts.push(internos[i * step]);
+        const valXs = new Set(valPts.map(p => p.x));
+        trainPts = ptsOrdenados.filter(p => !valXs.has(p.x));
+      }
+    }
+
+    const metodo = document.getElementById('interp-metodo').value;
+    // Orden calculado automáticamente: n puntos de entrenamiento → orden n-1
+    const orden = trainPts.length - 1;
+
+    let resultado;
+
+    switch(metodo) {
+      case 'vandermonde':      resultado = interpMetodoVandermonde(trainPts, orden); break;
+      case 'newton':           resultado = interpMetodoNewton(trainPts, orden); break;
+      case 'lagrange':         resultado = interpMetodoLagrange(trainPts); break;
+      case 'spline_lineal':    resultado = interpSplineLineal(trainPts); break;
+      case 'spline_cuadratico':resultado = interpSplineCuadratico(trainPts); break;
+      case 'spline_cubico':    resultado = interpSplineCubico(trainPts); break;
+    }
+
+    interpMostrarResultados(resultado, trainPts, valPts, metodo);
+    interpMostrarMsg('Interpolación completada correctamente', 'success');
+
+  } catch(e) {
+    interpMostrarMsg('Error: ' + e.message, 'error');
+    console.error(e);
+  }
+}
+
+function interpMostrarResultados(resultado, trainPts, valPts, metodo) {
+  document.getElementById('interp-placeholder').classList.add('hidden');
+  document.getElementById('interp-resultados').classList.remove('hidden');
+
+  const polyOut = document.getElementById('interp-poly-out');
+  const domOut  = document.getElementById('interp-dominio-out');
+  const tramosOut = document.getElementById('interp-tramos-out');
+  const errorValOut = document.getElementById('interp-error-val-out');
+
+  const [xMin, xMax] = resultado.dominio;
+  domOut.textContent = `Dominio: [${interpFormatNum(xMin)}, ${interpFormatNum(xMax)}]`;
+
+  if (resultado.tipo === 'global') {
+    polyOut.textContent = 'P(x) = ' + resultado.polinomio;
+    tramosOut.classList.add('hidden');
+  } else {
+    polyOut.textContent = `Spline por tramos (${resultado.tramos.length} segmentos)`;
+    tramosOut.classList.remove('hidden');
+    tramosOut.innerHTML = resultado.tramos.map((t, i) =>
+      `<div class="interp-tramo-item">
+        <div class="interp-tramo-label">Tramo ${i+1}: [${interpFormatNum(t.xMin)}, ${interpFormatNum(t.xMax)}]</div>
+        <div class="interp-tramo-poly">P${i+1}(x) = ${t.poly}</div>
+      </div>`
+    ).join('');
+  }
+
+  if (valPts.length > 0) {
+    const errores = valPts.map(p => Math.abs(p.y - resultado.evaluar(p.x)));
+    const eMax = Math.max(...errores);
+    const eMed = errores.reduce((a,b)=>a+b,0) / errores.length;
+    errorValOut.classList.remove('hidden');
+    errorValOut.innerHTML =
+      `⚡ Validación (${valPts.length} puntos reservados)<br>` +
+      `Error máx: ${eMax.toExponential(4)} &nbsp;|&nbsp; Error medio: ${eMed.toExponential(4)}`;
+  } else {
+    errorValOut.classList.add('hidden');
+  }
+
+  const tbody = document.getElementById('interp-tabla-body');
+  tbody.innerHTML = '';
+  const valXs = new Set(valPts.map(p=>p.x));
+  const todosLoPuntos = [...trainPts, ...valPts].sort((a,b)=>a.x-b.x);
+
+  todosLoPuntos.forEach((p, i) => {
+    const px = resultado.evaluar(p.x);
+    const err = Math.abs(p.y - px);
+    const esVal = valXs.has(p.x);
+    const tr = document.createElement('tr');
+    tr.innerHTML = `
+      <td>${i+1}</td>
+      <td>${interpFormatNum(p.x)}</td>
+      <td>${interpFormatNum(p.y)}</td>
+      <td>${interpFormatNum(px)}</td>
+      <td>${err.toExponential(3)}</td>
+      <td class="${esVal ? 'interp-td-val' : 'interp-tag-train'}">${esVal ? 'Validación' : 'Entrenamiento'}</td>
+    `;
+    tbody.appendChild(tr);
+  });
+
+  const xRange = xMax - xMin;
+  const step = xRange / 300;
+  const curva = [];
+  for (let x = xMin; x <= xMax + 1e-9; x += step) {
+    curva.push({ x: parseFloat(x.toFixed(6)), y: resultado.evaluar(x) });
+  }
+
+  if (interpChart1) interpChart1.destroy();
+  const ctx1 = document.getElementById('interp-grafica').getContext('2d');
+  interpChart1 = new Chart(ctx1, {
+    type: 'line',
+    data: {
+      datasets: [
+        {
+          label: 'P(x)',
+          data: curva,
+          borderColor: '#4a5568',
+          borderWidth: 2,
+          pointRadius: 0,
+          tension: 0.3,
+          fill: false
+        },
+        {
+          label: 'Puntos entrenamiento',
+          data: trainPts.map(p => ({x: p.x, y: p.y})),
+          borderColor: '#38a169',
+          backgroundColor: '#38a169',
+          pointRadius: 6,
+          pointHoverRadius: 8,
+          showLine: false,
+          type: 'scatter'
+        },
+        ...(valPts.length > 0 ? [{
+          label: 'Puntos validación',
+          data: valPts.map(p => ({x: p.x, y: p.y})),
+          borderColor: '#dd6b20',
+          backgroundColor: '#dd6b20',
+          pointRadius: 6,
+          pointStyle: 'triangle',
+          showLine: false,
+          type: 'scatter'
+        }] : [])
+      ]
+    },
+    options: {
+      responsive: true,
+      maintainAspectRatio: false,
+      plugins: { 
+        legend: { labels: { color: '#4a5568', font: { size: 10 } } },
+        tooltip: { mode: 'nearest', intersect: true }
+      },
+      scales: {
+        x: { type: 'linear', ticks: { color: '#718096', maxTicksLimit: 8 }, grid: { color: '#e2e8f0' } },
+        y: { ticks: { color: '#718096' }, grid: { color: '#e2e8f0' } }
+      }
+    }
+  });
+
+  const errData = todosLoPuntos.map(p => ({
+    x: p.x,
+    y: Math.abs(p.y - resultado.evaluar(p.x)),
+    esVal: valXs.has(p.x)
+  }));
+
+  if (interpChart2) interpChart2.destroy();
+  const ctx2 = document.getElementById('interp-grafica-error').getContext('2d');
+  interpChart2 = new Chart(ctx2, {
+    type: 'bar',
+    data: {
+      labels: errData.map(d => interpFormatNum(d.x)),
+      datasets: [{
+        label: 'Error |y - P(x)|',
+        data: errData.map(d => d.y),
+        backgroundColor: errData.map(d => d.esVal ? 'rgba(221,107,32,0.7)' : 'rgba(74,85,104,0.6)'),
+        borderColor: errData.map(d => d.esVal ? '#dd6b20' : '#4a5568'),
+        borderWidth: 1
+      }]
+    },
+    options: {
+      responsive: true,
+      maintainAspectRatio: false,
+      plugins: { 
+        legend: { labels: { color: '#4a5568', font: { size: 10 } } },
+        tooltip: { callbacks: { label: (ctx) => `Error: ${ctx.raw.toExponential(4)}` } }
+      },
+      scales: {
+        x: { ticks: { color: '#718096' }, grid: { color: '#e2e8f0' } },
+        y: { ticks: { color: '#718096' }, grid: { color: '#e2e8f0' }, title: { display: true, text: 'Error absoluto', color: '#718096' } }
+      }
+    }
+  });
+}
+
+// Inicialización de la Parte 3
+document.addEventListener('DOMContentLoaded', function() {
+  document.getElementById('interp-btn-agregar').addEventListener('click', interpAgregarPunto);
+  document.getElementById('interp-calcular').addEventListener('click', interpCalcular);
+  document.getElementById('interp-limpiar').addEventListener('click', interpLimpiar);
+  document.getElementById('interp-ejemplo').addEventListener('click', interpCargarEjemplo);
+
+  document.querySelectorAll('#tab-interpolacion .interp-val-badge').forEach(function(badge) {
+    badge.addEventListener('click', function() { interpSeleccionarVal(this, parseInt(this.dataset.pct)); });
+  });
+
+  interpCargarEjemplo();
+});
+</script>
+
+</body>
+</html>
